@@ -1,0 +1,107 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.game {
+  display: flex;
+  justify-content: center;
+}
+
+.board {
+  width: auto;
+  align-items: center;
+}
+
+.coordinate {
+  border-top: 1px solid black;
+
+  width: 30px;
+  height: 30px;
+  background: transparent;
+  text-align: center;
+  vertical-align: middle;
+  display: table-cell;
+  font-weight: bold;
+}
+
+.coordinate-start {
+  border-top: 1px solid black;
+  border-left: 1px solid black;
+}
+
+.coordinate-end {
+  border-top: 1px solid black;
+  border-right: 1px solid black;
+  border-left: 1px solid black;
+}
+
+.coordinate-middle {
+  border-left: 1px solid black;
+}
+
+.coordinate-end-row {
+  border-bottom: 1px solid black;
+}
+
+.coordinate-bolder-row {
+  border-bottom: 2px solid black;
+}
+
+.coordinate-bolder-column {
+  border-right: 2px solid black;
+}
+
+.coordinate-editable {
+  width: 100%;
+  /* padding: 5px; */
+  margin: 0;
+  text-align: center;
+  font-size: 16px;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  box-sizing: border-box;
+  border: 0px;
+}
+
+.coordinate-editable:focus {
+  outline: none !important;
+  border: 0 0 0 0;
+  box-shadow: 0 0 5px 0 blue;
+}
