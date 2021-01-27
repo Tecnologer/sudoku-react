@@ -2,6 +2,8 @@ import React, { ChangeEvent, KeyboardEvent, RefObject } from "react";
 import { ICoordinate } from "../models/iCoordinate";
 import "../App.css";
 
+const numberRegex = /[1-9]{1}/;
+
 export interface BoardProps {
   content: ICoordinate[][];
 }
@@ -27,11 +29,17 @@ class Board extends React.Component<BoardProps, BoardState> {
     );
   }
 
-  componentWillMount() {
-    this.setState({ content: this.props.content });
-  }
+  newBoard = (content: ICoordinate[][]) => {
+    console.log("new board");
+    this.setState({ content: content });
+  };
+
+  // componentDidUpdate() {
+  //   this.setState({ content: this.props.content });
+  // }
 
   getCoordinateFields = (content: ICoordinate[][]) => {
+    if (content === undefined) return null;
     return content.map((row, x) => {
       return (
         <div id={"row_" + x}>
@@ -63,6 +71,7 @@ class Board extends React.Component<BoardProps, BoardState> {
         value={coor.val}
         onChange={this.handleChange}
         ref={this.inputRefs[coor.x][coor.y]}
+        maxLength={1}
         onKeyDown={this.onKeyDown}
       />
     );
@@ -97,7 +106,11 @@ class Board extends React.Component<BoardProps, BoardState> {
   handleChange = (event: ChangeEvent<{ value: string; id: string }>) => {
     let { x, y } = this.extractCoordFromId(event.target.id);
 
-    if (x === undefined || y === undefined) {
+    if (
+      x === undefined ||
+      y === undefined ||
+      !numberRegex.test(event.target.value)
+    ) {
       return;
     }
     let content: ICoordinate[][] = this.state.content;
@@ -148,9 +161,10 @@ class Board extends React.Component<BoardProps, BoardState> {
     let current = a.current;
 
     let x1: number = 0;
-    let isOnX: boolean = event.key == "ArrowLeft" || event.key === "ArrowRight";
-    let xOffset: number = event.key == "ArrowLeft" ? -1 : 1;
-    let yOffset: number = event.key == "ArrowUp" ? -1 : 1;
+    let isOnX: boolean =
+      event.key === "ArrowLeft" || event.key === "ArrowRight";
+    let xOffset: number = event.key === "ArrowLeft" ? -1 : 1;
+    let yOffset: number = event.key === "ArrowUp" ? -1 : 1;
 
     let pivotOffset: number = isOnX ? xOffset : yOffset;
     let pivot: number = isOnX ? y + xOffset : x + yOffset;
