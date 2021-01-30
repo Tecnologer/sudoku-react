@@ -3,4 +3,5 @@ export interface ICoordinate {
   y: number;
   val: string;
   isLocked: boolean;
+  hasError: boolean;
 }
