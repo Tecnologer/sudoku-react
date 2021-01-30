@@ -1,4 +1,9 @@
-import React, { ChangeEvent, KeyboardEvent, RefObject } from "react";
+import React, {
+  ChangeEvent,
+  KeyboardEvent,
+  RefObject,
+  FocusEvent,
+} from "react";
 import { ICoordinate } from "../models/iCoordinate";
 import "../App.css";
 
@@ -6,6 +11,7 @@ const numberRegex = /[1-9]{1}/;
 
 export interface BoardProps {
   content: ICoordinate[][];
+  onSetValue(e: FocusEvent<HTMLInputElement>): void;
 }
 
 export interface BoardState {
@@ -34,19 +40,15 @@ class Board extends React.Component<BoardProps, BoardState> {
     this.setState({ content: content });
   };
 
-  // componentDidUpdate() {
-  //   this.setState({ content: this.props.content });
-  // }
-
   getCoordinateFields = (content: ICoordinate[][]) => {
     if (content === undefined) return null;
     return content.map((row, x) => {
       return (
-        <div id={"row_" + x}>
+        <div key={"row_" + x}>
           {row.map((col, y) => {
             return (
               <div
-                id={"col_" + x + "_" + y}
+                key={"col_" + x + "_" + y}
                 className={this.getCoordinateClass(x, y)}
               >
                 {this.formatCell(col)}
@@ -64,16 +66,32 @@ class Board extends React.Component<BoardProps, BoardState> {
     }
 
     return (
-      <input
-        id={coor.x + "," + coor.y}
-        type="text"
-        className="coordinate-editable "
-        value={coor.val}
-        onChange={this.handleChange}
-        ref={this.inputRefs[coor.x][coor.y]}
-        maxLength={1}
-        onKeyDown={this.onKeyDown}
-      />
+      <div key={"container_" + coor.x + "," + coor.y}>
+        <span
+          key={"err_" + coor.x + "," + coor.y}
+          className="error-mark"
+          style={{ visibility: coor.hasError ? "visible" : "collapse" }}
+        >
+          *
+        </span>
+        <div
+          key={"container_input_" + coor.x + "," + coor.y}
+          className="coordinate-container"
+        >
+          <input
+            key={coor.x + "," + coor.y}
+            id={coor.x + "," + coor.y}
+            type="text"
+            className="coordinate-editable "
+            value={coor.val}
+            onChange={this.handleChange}
+            ref={this.inputRefs[coor.x][coor.y]}
+            maxLength={1}
+            onKeyDown={this.onKeyDown}
+            onBlur={this.props.onSetValue}
+          />
+        </div>
+      </div>
     );
   };
 
@@ -216,6 +234,38 @@ class Board extends React.Component<BoardProps, BoardState> {
     }
 
     console.log(this.inputRefs);
+  };
+
+  setRowError = (row: number, hasError: boolean) => {
+    if (row < 0 || row > 8) return;
+
+    this.state.content[row].forEach((element) => {
+      element.hasError = hasError;
+    });
+  };
+
+  setColError = (col: number, hasError: boolean) => {
+    if (col < 0 || col > 8) return;
+
+    this.state.content.forEach((element) => {
+      element[col].hasError = hasError;
+    });
+  };
+
+  setSquareError = (row: number, col: number, hasError: boolean) => {
+    if (col < 0 || col > 8 || row < 0 || row > 8) return;
+
+    this.state.content.forEach((element) => {
+      element[col].hasError = hasError;
+    });
+  };
+
+  clearErrors = () => {
+    this.state.content.forEach((row) => {
+      row.forEach((col) => {
+        col.hasError = false;
+      });
+    });
   };
 }
 
