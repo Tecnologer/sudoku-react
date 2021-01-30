@@ -1,19 +1,24 @@
 import "../App.css";
-import * as React from "react";
+import React, { FocusEvent } from "react";
 import Board from "./board";
 import { ICoordinate } from "../models/iCoordinate";
 import { IGame, IGameRes, IGameButton } from "../models/iGame";
 import { http } from "../utils/http";
+import { format } from "react-string-format";
+import { IMessageRes, IValidateErrsRes } from "../models/httpResponses";
+import { timeStamp } from "console";
 
 export interface GameProps {}
 
 export interface GameState {
   game: IGame;
   buttons: IGameButton[];
+  error: string;
 }
 
 class Game extends React.Component<GameProps, GameState> {
   state = {
+    error: "",
     game: {} as IGame,
     buttons: Array<IGameButton>(),
   };
@@ -24,36 +29,47 @@ class Game extends React.Component<GameProps, GameState> {
 
     this.state.game.board = this.getEmptyBoard();
     this.state.buttons[0] = { level: "easy", label: "New Easy" } as IGameButton;
-
-    this.getLevels();
   }
 
   render() {
     return (
       <div>
-        <div className="game">
-          <Board content={this.state.game.board} ref={this.boardRef} />
-        </div>
-        <div style={{ paddingTop: "5px" }}>
+        <div style={{ padding: "8px" }}>
           {this.state.buttons.map((btn) => {
             return (
               <button
+                key={"btn_" + btn.label.replace(" ", "")}
                 onClick={() => this.getContent(btn.level)}
-                style={{ paddingLeft: "5px" }}
+                style={{ marginLeft: "5px" }}
               >
                 {btn.label}
               </button>
             );
           })}
-          {/* <button onClick={() => this.getContent("easy")}>New Easy</button>
-          <button onClick={() => this.getContent("medium")}>New medium</button> */}
+        </div>
+        <div className="game">
+          <Board
+            content={this.state.game.board}
+            ref={this.boardRef}
+            onSetValue={this.onSetValue}
+          />
+        </div>
+        <div>
+          <button style={{ marginTop: "5px" }} onClick={this.validateGame}>
+            Check
+          </button>
+        </div>
+        <div>
+          <span className="error-message">{this.state.error}</span>
         </div>
       </div>
     );
   }
 
   componentDidMount() {
-    this.boardRef.current?.newBoard(this.getEmptyBoard());
+    // this.boardRef.current?.newBoard(this.getEmptyBoard());
+    this.getContent("empty");
+    this.getLevels();
   }
 
   getContent = async (level: string) => {
@@ -69,7 +85,9 @@ class Game extends React.Component<GameProps, GameState> {
     //   ["5", "3", "", "", "", "6", "", "", "2"],
     // ];
 
-    const resp = await http<IGameRes>("api/game?level=" + level);
+    const resp = await http<IGameRes>(
+      format("api/game?level={0}", level === "" ? "empty" : level)
+    );
 
     const board: ICoordinate[][] = this.parseContentToCoordinates(resp.board);
     this.setState({
@@ -94,6 +112,7 @@ class Game extends React.Component<GameProps, GameState> {
           y: y,
           val: col === 0 ? "" : col.toString(),
           isLocked: col !== 0,
+          hasError: false,
         };
       });
     });
@@ -131,6 +150,54 @@ class Game extends React.Component<GameProps, GameState> {
 
     if (levels.length > 0) {
       this.setState({ buttons: levels });
+    }
+  };
+
+  onSetValue = async (event: FocusEvent<HTMLInputElement>) => {
+    const coors = event.target.id.split(",");
+    const x = coors[0];
+    const y = coors[1];
+    const n = event.target.value || "0";
+
+    const url = format("api/game/set?x={0}&y={1}&n={2}", x, y, n);
+    const res = await http<IMessageRes | IGameRes>(url);
+
+    const err = res as IMessageRes;
+    if (err.status !== undefined && err.status !== 200) {
+      this.setState({ error: err.message });
+      return;
+    }
+    const gameUpdated = res as IGameRes;
+    let currentGame = this.state.game;
+    currentGame.board = this.parseContentToCoordinates(gameUpdated.board);
+
+    this.setState({ game: currentGame });
+  };
+
+  clearError = () => {
+    setTimeout(() => {
+      this.setState({ error: "" });
+    }, 10000);
+  };
+
+  validateGame = async () => {
+    const url = format("api/game/validate");
+    const errs = await http<IValidateErrsRes>(url);
+
+    this.boardRef.current?.clearErrors();
+
+    if (errs === undefined || errs.count === 0) return;
+
+    for (let errType in errs.errors) {
+      errs.errors[errType].forEach((e) => {
+        if (errType === "column") {
+          this.boardRef.current?.setColError(e.y, true);
+        } else if (errType === "row") {
+          this.boardRef.current?.setRowError(e.x, true);
+        } else if (errType === "square") {
+          this.boardRef.current?.setSquareError(e.x, e.y, true);
+        }
+      });
     }
   };
 }
