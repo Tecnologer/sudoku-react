@@ -69,10 +69,10 @@ class Board extends React.Component<BoardProps, BoardState> {
       <div key={"container_" + coor.x + "," + coor.y}>
         <span
           key={"err_" + coor.x + "," + coor.y}
-          className="error-mark"
-          style={{ visibility: coor.hasError ? "visible" : "collapse" }}
+          className={"error-mark error-mark-" + coor.errorType}
+          style={{ visibility: coor.errorType !== "" ? "visible" : "collapse" }}
         >
-          *
+          {this.displayErrType(coor.errorType)}
         </span>
         <div
           key={"container_input_" + coor.x + "," + coor.y}
@@ -81,7 +81,7 @@ class Board extends React.Component<BoardProps, BoardState> {
           <input
             key={coor.x + "," + coor.y}
             id={coor.x + "," + coor.y}
-            type="text"
+            type="number"
             className="coordinate-editable "
             value={coor.val}
             onChange={this.handleChange}
@@ -127,7 +127,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     if (
       x === undefined ||
       y === undefined ||
-      !numberRegex.test(event.target.value)
+      (!numberRegex.test(event.target.value) && event.target.value !== "")
     ) {
       return;
     }
@@ -140,10 +140,12 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   onKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
     if (
-      event.key !== "ArrowUp" &&
-      event.key !== "ArrowDown" &&
-      event.key !== "ArrowLeft" &&
-      event.key !== "ArrowRight"
+      (event.key !== "ArrowUp" &&
+        event.key !== "ArrowDown" &&
+        event.key !== "ArrowLeft" &&
+        event.key !== "ArrowRight") ||
+      event.altKey ||
+      event.shiftKey
     ) {
       return;
     }
@@ -236,36 +238,36 @@ class Board extends React.Component<BoardProps, BoardState> {
     console.log(this.inputRefs);
   };
 
-  setRowError = (row: number, hasError: boolean) => {
-    if (row < 0 || row > 8) return;
-
-    this.state.content[row].forEach((element) => {
-      element.hasError = hasError;
-    });
-  };
-
-  setColError = (col: number, hasError: boolean) => {
-    if (col < 0 || col > 8) return;
-
-    this.state.content.forEach((element) => {
-      element[col].hasError = hasError;
-    });
-  };
-
-  setSquareError = (row: number, col: number, hasError: boolean) => {
+  setError = (row: number, col: number, errType: string) => {
     if (col < 0 || col > 8 || row < 0 || row > 8) return;
 
-    this.state.content.forEach((element) => {
-      element[col].hasError = hasError;
-    });
+    const content = this.state.content;
+    content[row][col].errorType = errType;
+    this.setState({ content: content });
   };
 
   clearErrors = () => {
-    this.state.content.forEach((row) => {
+    const content = this.state.content;
+    content.forEach((row) => {
       row.forEach((col) => {
-        col.hasError = false;
+        col.errorType = "";
       });
     });
+
+    this.setState({ content: content });
+  };
+
+  displayErrType = (type: string): string => {
+    switch (type) {
+      case "row":
+        return "↔";
+      case "column":
+        return "↕";
+      case "square":
+        return "⮔";
+      default:
+        return "*";
+    }
   };
 }
 
