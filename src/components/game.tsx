@@ -58,6 +58,9 @@ class Game extends React.Component<GameProps, GameState> {
           <button style={{ marginTop: "5px" }} onClick={this.validateGame}>
             Check
           </button>
+          <button style={{ marginLeft: "5px" }} onClick={this.solveGame}>
+            Solve
+          </button>
         </div>
         <div>
           <span className="error-message">{this.state.error}</span>
@@ -112,7 +115,7 @@ class Game extends React.Component<GameProps, GameState> {
           y: y,
           val: col === 0 ? "" : col.toString(),
           isLocked: col !== 0,
-          hasError: false,
+          errorType: "",
         };
       });
     });
@@ -157,7 +160,7 @@ class Game extends React.Component<GameProps, GameState> {
     const coors = event.target.id.split(",");
     const x = coors[0];
     const y = coors[1];
-    const n = event.target.value || "0";
+    const n = event.target.value;
 
     const url = format("api/game/set?x={0}&y={1}&n={2}", x, y, n);
     const res = await http<IMessageRes | IGameRes>(url);
@@ -189,16 +192,23 @@ class Game extends React.Component<GameProps, GameState> {
     if (errs === undefined || errs.count === 0) return;
 
     for (let errType in errs.errors) {
-      errs.errors[errType].forEach((e) => {
-        if (errType === "column") {
-          this.boardRef.current?.setColError(e.y, true);
-        } else if (errType === "row") {
-          this.boardRef.current?.setRowError(e.x, true);
-        } else if (errType === "square") {
-          this.boardRef.current?.setSquareError(e.x, e.y, true);
-        }
-      });
+      for (let key in errs.errors[errType]) {
+        let e = errs.errors[errType][key];
+        this.boardRef.current?.setError(e.x, e.y, errType);
+      }
     }
+  };
+
+  solveGame = async () => {
+    const url = "api/game/solve";
+    const solve = await http<IGameRes>(url);
+
+    let currentGame = this.state.game;
+    currentGame.board = this.parseContentToCoordinates(solve.board);
+
+    this.setState({ game: currentGame });
+
+    this.boardRef.current?.newBoard(currentGame.board);
   };
 }
 

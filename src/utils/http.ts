@@ -1,4 +1,4 @@
-const host:string = "http://localhost:8088/"
+const host:string = "http://192.168.1.64:8088/"
 
 export async function http<T>(
   request: RequestInfo
