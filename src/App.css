@@ -126,3 +126,31 @@
   margin-left: 20px;
   margin-top: -7px;
 }
+
+.error-mark-row {
+  margin-left: 16px;
+  margin-top: -12px;
+}
+
+.error-mark-column {
+  margin-left: 21px;
+  margin-top: -9px;
+}
+
+.error-mark-square {
+  margin-left: 18px;
+  font-size: 10px;
+  margin-top: -6px;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
